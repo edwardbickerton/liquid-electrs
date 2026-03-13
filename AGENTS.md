@@ -3,6 +3,12 @@
 This file captures repo-specific guidance for future Codex sessions in this
 repository.
 
+## Umbrel App Framework Reference
+
+- Use the Umbrel App Framework README as the upstream reference for Umbrel app
+  packaging and conventions:
+  https://github.com/getumbrel/umbrel-apps/blob/master/README.md
+
 ## What This Repo Is For
 
 - This repository exists to package Blockstream `electrs` as a self-hosted
@@ -69,4 +75,3 @@ repository.
   local `build:` sections instead of published multi-arch images pinned by
   digest.
 - The app assumes the Elements app provides a healthy external RPC endpoint.
-
