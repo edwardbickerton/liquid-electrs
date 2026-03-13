@@ -56,12 +56,13 @@ runtime.
 To connect Blockstream App desktop to this server:
 
 1. Open the custom Electrum server settings in Blockstream App.
-2. Set the address to `umbrel.local`.
-3. Set the port to `51001`.
-4. Keep `Enable TLS/SSL` disabled.
+2. Set the address to your Umbrel device's `.local` hostname.
+3. On a default installation that will usually be `umbrel.local`.
+4. Set the port to `51001`.
+5. Keep `Enable TLS/SSL` disabled.
 
 The landing page QR code encodes the same plain `host:port` value:
-`umbrel.local:51001`.
+`<your-device-domain>.local:51001`.
 
 ## Notes Before Publishing
 
@@ -77,7 +78,8 @@ The landing page QR code encodes the same plain `host:port` value:
 Recommended workflow:
 
 - run the app through `umbrel-dev` with the Elements app already installed
-- verify the landing page shows live version, sync progress, `umbrel.local`,
-  `51001`, and `Disabled`
-- connect `Blockstream App` desktop to `umbrel.local:51001`
+- verify the landing page shows live version, sync progress, your current
+  Umbrel `.local` hostname, `51001`, and `Disabled`
+- connect `Blockstream App` desktop to your current Umbrel `.local` hostname on
+  port `51001`
 - keep `Enable TLS/SSL` disabled

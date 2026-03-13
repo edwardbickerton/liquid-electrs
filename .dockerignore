@@ -1,0 +1,12 @@
+.DS_Store
+.git
+.vscode
+AGENTS.md
+README.md
+data
+gateway
+node_modules
+apps/frontend/dist
+npm-debug.log*
+gallery-1.png
+icon.svg
