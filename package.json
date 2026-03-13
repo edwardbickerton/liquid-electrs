@@ -1,0 +1,13 @@
+{
+  "name": "liquid-electrs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build:frontend": "npm run build -w liquid-electrs-frontend",
+    "dev:backend": "npm run start -w liquid-electrs-backend",
+    "dev:frontend": "npm run serve -w liquid-electrs-frontend"
+  },
+  "workspaces": [
+    "apps/*"
+  ]
+}

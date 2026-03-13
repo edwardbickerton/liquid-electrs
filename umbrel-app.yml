@@ -5,11 +5,11 @@ tagline: Self-hosted Liquid Electrum server for Umbrel
 icon: icon.svg
 category: finance
 version: "0.1.0"
-port: 8080
+port: 3006
 description: >-
   Runs a Liquid Electrum server on Umbrel using the installed Elements app,
-  with a small landing page that shows the connection details for Blockstream
-  App desktop clients.
+  with a dynamic landing page that shows live sync and connection details for
+  Blockstream App desktop clients.
 developer: Edward Bickerton
 website: https://github.com/Blockstream/electrs
 dependencies:
@@ -21,4 +21,3 @@ gallery:
   - gallery-1.png
 releaseNotes: ""
 path: ""
-

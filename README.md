@@ -1,14 +1,9 @@
 # Liquid Electrs for Umbrel
 
-This repository packages a Liquid Electrum server as a standalone Umbrel app.
-It is intentionally small and wrapper-focused: the app uses Umbrel's existing
-Elements app as its only declared dependency and adds just enough UX to help
-desktop `Blockstream App` users connect to their own Liquid server.
-
-The app exposes:
-
-- a landing page at the app root with copy-friendly connection details
-- a plain Liquid Electrum endpoint on port `51001`
+This repository packages Blockstream `electrs` as a standalone Umbrel app for
+Liquid mainnet. The app is intentionally narrow: it depends only on Umbrel's
+Elements app, exposes a plain Electrum endpoint on `51001`, and serves a
+dynamic landing page that mirrors Umbrel's Bitcoin `electrs` app closely.
 
 The app does not ship:
 
@@ -23,8 +18,11 @@ The app does not ship:
 - `docker-compose.yml`: Umbrel runtime definition
 - `exports.sh`: exported connection variables
 - `AGENTS.md`: repo-specific guidance for future Codex sessions
-- `electrs/`: Blockstream `electrs` source build and runtime wrapper
-- `gateway/`: static landing page served through Nginx
+- `electrs/`: Blockstream `electrs` build and runtime wrapper
+- `apps/backend/`: Express API that serves the frontend and exposes
+  `/ping`, `/v1/electrs/version`, `/v1/electrs/syncPercent`, and
+  `/v1/electrs/electrum-connection-details`
+- `apps/frontend/`: Vue app that renders the Umbrel-style connection page
 
 ## Runtime Summary
 
@@ -32,11 +30,13 @@ At runtime, the app is split into two services:
 
 - `electrs`: builds and runs Blockstream `electrs` with Liquid support against
   the external Elements RPC endpoint
-- `gateway`: serves the root landing page with the LAN host and port details
+- `app`: serves the landing page and polls live sync/version state from
+  `electrs` and Elements RPC
 
 Request flow:
 
-- browser traffic to `/` is served by `gateway`
+- browser traffic to `/` goes through Umbrel `app_proxy` into the `app`
+  service on port `3006`
 - wallet traffic to `51001` hits `electrs` directly
 
 The app depends on Umbrel's `elements` app. `electrs` still runs with
@@ -51,12 +51,23 @@ The Umbrel `docker-compose.yml` is intentionally not directly runnable with
 plain Docker Compose because Umbrel injects the `app_proxy` service image at
 runtime.
 
+## Connect Blockstream App
+
+To connect Blockstream App desktop to this server:
+
+1. Open the custom Electrum server settings in Blockstream App.
+2. Set the address to `umbrel.local`.
+3. Set the port to `51001`.
+4. Keep `Enable TLS/SSL` disabled.
+
+The landing page QR code encodes the same plain `host:port` value:
+`umbrel.local:51001`.
+
 ## Notes Before Publishing
 
-- `repo` and `support` in `umbrel-app.yml` assume the GitHub repository will be
-  published at `edwardbickerton/liquid-electrs`. Update them if it lives
-  elsewhere.
-- `docker-compose.yml` currently uses local `build:` sections and is meant for
+- `repo` and `support` in `umbrel-app.yml` assume the GitHub repository lives
+  at `edwardbickerton/liquid-electrs`.
+- `docker-compose.yml` still uses local `build:` sections and is intended for
   development and packaging iteration first.
 - Producing published multi-arch images pinned by digest is a later release
   step.
@@ -66,6 +77,7 @@ runtime.
 Recommended workflow:
 
 - run the app through `umbrel-dev` with the Elements app already installed
-- verify the landing page renders the expected `host:port`
+- verify the landing page shows live version, sync progress, `umbrel.local`,
+  `51001`, and `Disabled`
 - connect `Blockstream App` desktop to `umbrel.local:51001`
 - keep `Enable TLS/SSL` disabled

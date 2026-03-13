@@ -26,6 +26,8 @@ repository.
 - TLS/SSL is intentionally disabled.
 - The landing page should tell users to keep `Enable TLS/SSL` disabled in
   `Blockstream App`.
+- The landing page should stay visually close to Umbrel's Bitcoin `electrs`
+  app, but without any Tor UI.
 
 ## Scope Boundaries
 
@@ -39,7 +41,9 @@ repository.
 ## Current App Architecture
 
 - `electrs/` builds and runs Blockstream `electrs` with the `liquid` feature.
-- `gateway/` serves the landing page at the app root.
+- `apps/backend/` serves the frontend bundle and exposes the internal HTTP API
+  used by the landing page.
+- `apps/frontend/` renders the Umbrel-style landing page.
 - Wallet traffic goes straight to the `electrs` service on port `51001`.
 - The app uses the external Elements RPC endpoint supplied by Umbrel via
   `APP_ELEMENTS_*` variables.
@@ -49,7 +53,8 @@ repository.
 - The repo root contains Umbrel metadata, the compose file, exported
   connection variables, store assets, and docs.
 - `electrs/` owns the Liquid `electrs` image build and startup logic.
-- `gateway/` owns the static landing page and Nginx configuration.
+- `apps/backend/` owns the Express API and static bundle serving.
+- `apps/frontend/` owns the Vue landing page, Tailwind styling, and QR/copy UI.
 
 ## Working Rules For Future Sessions
 
@@ -57,16 +62,16 @@ repository.
 - Prefer configuring upstream `electrs` over patching its source.
 - If ports or connection details change, update `docker-compose.yml`,
   `exports.sh`, and the landing page together.
-- If the landing page changes, rebuild the `gateway` image when testing so the
-  template changes are picked up.
+- If the landing page changes, rebuild the root `app` image when testing so the
+  frontend bundle and backend serve layer stay in sync.
 - This repo is the canonical project root. Do not treat `liquid-esplora` as
   the active app once this repo exists.
 
 ## Test Workflow
 
 - Use Umbrel / `umbrel-dev` with the Elements app installed.
-- Verify the landing page loads and shows the expected `umbrel.local:51001`
-  value.
+- Verify the landing page loads and shows live sync/version status plus the
+  expected `umbrel.local:51001` value.
 - Verify `Blockstream App` desktop connects successfully with TLS disabled.
 
 ## Known Caveats

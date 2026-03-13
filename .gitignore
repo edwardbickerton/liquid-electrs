@@ -1,3 +1,6 @@
 .DS_Store
 data/
 .vscode/
+node_modules/
+apps/frontend/dist/
+npm-debug.log*
