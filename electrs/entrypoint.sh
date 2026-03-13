@@ -22,6 +22,8 @@ BANNER="${ELECTRS_BANNER:-Umbrel Liquid Electrs}"
 
 mkdir -p /data/electrs_liquid_db /tmp/elements
 
+# Umbrel hardware is resource constrained, so keep light mode on and do not
+# enable address search indexing.
 exec /usr/local/bin/electrs \
   -"${LOG_LEVEL}" \
   --timestamp \
@@ -36,4 +38,3 @@ exec /usr/local/bin/electrs \
   --monitoring-addr 0.0.0.0:4224 \
   --db-dir /data/electrs_liquid_db/mainnet \
   --electrum-banner "${BANNER}"
-

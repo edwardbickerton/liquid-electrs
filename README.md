@@ -43,6 +43,10 @@ The app depends on Umbrel's `elements` app. `electrs` still runs with
 `--parent-network bitcoin` because that is a Liquid runtime setting, not a
 direct Umbrel dependency declaration.
 
+The `electrs` wrapper is intentionally shipped in a low-resource configuration
+for Umbrel devices: `--lightmode` is enabled and address search is left
+disabled.
+
 The Umbrel `docker-compose.yml` is intentionally not directly runnable with
 plain Docker Compose because Umbrel injects the `app_proxy` service image at
 runtime.
