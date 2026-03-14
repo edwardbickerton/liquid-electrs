@@ -47,9 +47,7 @@ function readElementsConf() {
     return fs.readFileSync(confPath, "utf8");
   } catch (error) {
     if (error.code === "ENOENT") {
-      throw new Error(
-        `Missing Elements config at ${confPath}. This app expects Umbrel's PeerSwap-style \${ELEMENTS_DATA_DIR} mount.`
-      );
+      return "";
     }
 
     throw error;
@@ -57,6 +55,12 @@ function readElementsConf() {
 }
 
 function readRpcPassword() {
+  const envPassword = firstNonEmpty(process.env.ELEMENTS_PASS);
+
+  if (envPassword) {
+    return envPassword;
+  }
+
   const contents = readElementsConf();
 
   for (const line of contents.split(/\r?\n/)) {
@@ -84,7 +88,7 @@ function readRpcPassword() {
   }
 
   throw new Error(
-    "Missing rpcpassword in elements.conf. This app expects Umbrel's PeerSwap-style Elements datadir mount."
+    "Missing Elements RPC password. Set ELEMENTS_PASS from Umbrel APP_ELEMENTS_RPC_PASS or mount elements.conf with rpcpassword."
   );
 }
 

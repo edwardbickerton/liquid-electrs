@@ -45,10 +45,15 @@ repository.
   used by the landing page.
 - `apps/frontend/` renders the Umbrel-style landing page.
 - Wallet traffic goes straight to the `electrs` service on port `51001`.
-- The app uses PeerSwap-style Umbrel Elements wiring: `ELEMENTS_HOST` should be
+- The app uses Umbrel Elements dependency exports: `ELEMENTS_HOST` should be
   `http://elements_node_1`, `ELEMENTS_PORT` should come from
-  `APP_ELEMENTS_NODE_RPC_PORT`, `ELEMENTS_USER` should be `elements`, and a
-  read-only `${ELEMENTS_DATA_DIR}` mount should expose `elements.conf`.
+  `APP_ELEMENTS_NODE_RPC_PORT`, `ELEMENTS_USER` should come from
+  `APP_ELEMENTS_RPC_USER` when available, and `ELEMENTS_PASS` should come from
+  `APP_ELEMENTS_RPC_PASS`. A read-only `${ELEMENTS_DATA_DIR}` mount may remain
+  as a fallback source for `elements.conf`, but it is not the primary auth path.
+- `exports.sh` should continue to derive the Elements RPC password from the
+  `elements` app seed as a guard against Umbrel's legacy dependency export flow
+  leaking the current app's `APP_PASSWORD` into dependency exports.
 
 ## Directory Responsibilities
 

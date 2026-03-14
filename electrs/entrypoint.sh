@@ -12,7 +12,7 @@ elements_conf_value() {
   conf_path="${conf_dir}/elements.conf"
 
   if [ ! -f "$conf_path" ]; then
-    die "Missing Elements config at ${conf_path}. This app expects Umbrel's PeerSwap-style \${ELEMENTS_DATA_DIR} mount."
+    return 1
   fi
 
   awk -F= -v lookup_key="$key" '
@@ -43,7 +43,11 @@ normalize_host() {
 ELEMENTS_HOST="${ELEMENTS_HOST:-http://elements_node_1}"
 ELEMENTS_PORT="${ELEMENTS_PORT:-}"
 ELEMENTS_USER="${ELEMENTS_USER:-elements}"
-ELEMENTS_PASS="$(elements_conf_value rpcpassword || true)"
+ELEMENTS_PASS="${ELEMENTS_PASS:-}"
+
+if [ -z "$ELEMENTS_PASS" ]; then
+  ELEMENTS_PASS="$(elements_conf_value rpcpassword || true)"
+fi
 
 ELEMENTS_HOST="$(normalize_host "$ELEMENTS_HOST")"
 
@@ -52,7 +56,7 @@ if [ -z "$ELEMENTS_PORT" ]; then
 fi
 
 if [ -z "$ELEMENTS_PASS" ]; then
-  die "Missing rpcpassword in elements.conf. This app expects Umbrel's PeerSwap-style Elements datadir mount."
+  die "Missing Elements RPC password. Set ELEMENTS_PASS from Umbrel APP_ELEMENTS_RPC_PASS or mount elements.conf with rpcpassword."
 fi
 
 COOKIE="${ELEMENTS_USER}:${ELEMENTS_PASS}"

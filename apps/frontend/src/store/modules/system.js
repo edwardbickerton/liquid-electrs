@@ -15,7 +15,7 @@ const mutations = {
 
 const actions = {
   async getApi({ commit }) {
-    const api = await API.get(`${process.env.VUE_APP_API_BASE_URL}/ping`);
+    const api = await API.get("ping");
 
     commit("setApi", {
       operational: !!(api && api.version),

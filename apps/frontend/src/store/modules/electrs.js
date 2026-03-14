@@ -28,9 +28,7 @@ const mutations = {
 
 const actions = {
   async getConnectionInformation({ commit }) {
-    const connectionInfo = await API.get(
-      `${process.env.VUE_APP_API_BASE_URL}/v1/electrs/electrum-connection-details`
-    );
+    const connectionInfo = await API.get("v1/electrs/electrum-connection-details");
 
     if (connectionInfo && connectionInfo.local) {
       commit("setConnectionInfo", connectionInfo);
@@ -38,9 +36,7 @@ const actions = {
   },
 
   async getVersion({ commit }) {
-    const version = await API.get(
-      `${process.env.VUE_APP_API_BASE_URL}/v1/electrs/version`
-    );
+    const version = await API.get("v1/electrs/version");
 
     if (typeof version === "string") {
       commit("setVersion", version);
@@ -48,9 +44,7 @@ const actions = {
   },
 
   async getSyncPercent({ commit }) {
-    const syncPercent = await API.get(
-      `${process.env.VUE_APP_API_BASE_URL}/v1/electrs/syncPercent`
-    );
+    const syncPercent = await API.get("v1/electrs/syncPercent");
 
     if (typeof syncPercent === "number") {
       commit("setSyncPercent", syncPercent);

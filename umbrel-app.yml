@@ -5,7 +5,7 @@ tagline: Self-hosted Liquid Electrum server for Umbrel
 icon: icon.svg
 category: finance
 version: "0.1.0"
-port: 3006
+port: 3016
 description: >-
   Runs a Liquid Electrum server on Umbrel using the installed Elements app,
   with a dynamic landing page that shows live sync and connection details for

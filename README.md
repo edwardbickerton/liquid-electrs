@@ -43,11 +43,15 @@ The app depends on Umbrel's `elements` app. `electrs` still runs with
 `--parent-network bitcoin` because that is a Liquid runtime setting, not a
 direct Umbrel dependency declaration.
 
-The supported Umbrel integration path matches PeerSwap's Elements wiring: use
-`http://elements_node_1` as the service host, map
-`APP_ELEMENTS_NODE_RPC_PORT` onto `ELEMENTS_PORT`, set `ELEMENTS_USER=elements`,
-and mount `${ELEMENTS_DATA_DIR}` read-only so the app can read
-`elements.conf` for RPC authentication.
+The supported Umbrel integration path uses Umbrel's exported Elements RPC
+credentials: use `http://elements_node_1` as the service host, map
+`APP_ELEMENTS_NODE_RPC_PORT` onto `ELEMENTS_PORT`, and pass through
+`APP_ELEMENTS_RPC_USER` and `APP_ELEMENTS_RPC_PASS`. A read-only
+`${ELEMENTS_DATA_DIR}` mount can still be kept as a fallback source for
+`elements.conf`, but it is no longer the primary authentication path.
+`exports.sh` also re-derives the Elements RPC password defensively so this app
+does not inherit its own `APP_PASSWORD` through Umbrel's legacy dependency
+export flow.
 
 The `electrs` wrapper is intentionally shipped in a low-resource configuration
 for Umbrel devices: `--lightmode` is enabled and address search is left
