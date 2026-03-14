@@ -43,6 +43,12 @@ The app depends on Umbrel's `elements` app. `electrs` still runs with
 `--parent-network bitcoin` because that is a Liquid runtime setting, not a
 direct Umbrel dependency declaration.
 
+The supported Umbrel integration path matches PeerSwap's Elements wiring: use
+`http://elements_node_1` as the service host, map
+`APP_ELEMENTS_NODE_RPC_PORT` onto `ELEMENTS_PORT`, set `ELEMENTS_USER=elements`,
+and mount `${ELEMENTS_DATA_DIR}` read-only so the app can read
+`elements.conf` for RPC authentication.
+
 The `electrs` wrapper is intentionally shipped in a low-resource configuration
 for Umbrel devices: `--lightmode` is enabled and address search is left
 disabled.

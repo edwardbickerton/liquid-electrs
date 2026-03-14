@@ -9,14 +9,15 @@ services:
     build: ./electrs
     restart: unless-stopped
     environment:
-      APP_ELEMENTS_NODE_IP: ${APP_ELEMENTS_NODE_IP:-}
-      APP_ELEMENTS_RPC_PORT: ${APP_ELEMENTS_RPC_PORT:-}
-      APP_ELEMENTS_RPC_USER: ${APP_ELEMENTS_RPC_USER:-}
-      APP_ELEMENTS_RPC_PASS: ${APP_ELEMENTS_RPC_PASS:-}
+      ELEMENTS_HOST: http://elements_node_1
+      ELEMENTS_PORT: ${APP_ELEMENTS_NODE_RPC_PORT:-}
+      ELEMENTS_USER: elements
+      ELEMENTS_CONF_DIR: /mnt/elements
       ELECTRS_LOG_LEVEL: ${ELECTRS_LOG_LEVEL:-vv}
       ELECTRS_BANNER: "Umbrel Liquid Electrs"
     volumes:
       - ${APP_DATA_DIR}/data:/data
+      - ${ELEMENTS_DATA_DIR:-/tmp/liquid-electrs-elements-data}:/mnt/elements:ro
     ports:
       - "51001:50001"
 
@@ -27,10 +28,12 @@ services:
       - electrs
     environment:
       PORT: "3006"
-      APP_ELEMENTS_NODE_IP: ${APP_ELEMENTS_NODE_IP:-}
-      APP_ELEMENTS_RPC_PORT: ${APP_ELEMENTS_RPC_PORT:-}
-      APP_ELEMENTS_RPC_USER: ${APP_ELEMENTS_RPC_USER:-}
-      APP_ELEMENTS_RPC_PASS: ${APP_ELEMENTS_RPC_PASS:-}
+      ELEMENTS_HOST: http://elements_node_1
+      ELEMENTS_PORT: ${APP_ELEMENTS_NODE_RPC_PORT:-}
+      ELEMENTS_USER: elements
+      ELEMENTS_CONF_DIR: /mnt/elements
       ELECTRS_HOST: electrs
       ELECTRUM_LOCAL_SERVICE: ${DEVICE_DOMAIN_NAME:-umbrel.local}
       ELECTRUM_PORT: "51001"
+    volumes:
+      - ${ELEMENTS_DATA_DIR:-/tmp/liquid-electrs-elements-data}:/mnt/elements:ro

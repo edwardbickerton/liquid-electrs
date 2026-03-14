@@ -1,25 +1,20 @@
 const axios = require("axios");
 
-const {
-  APP_ELEMENTS_NODE_IP,
-  APP_ELEMENTS_RPC_PASS,
-  APP_ELEMENTS_RPC_PORT,
-  APP_ELEMENTS_RPC_USER,
-} = require("../utils/const");
-
-const rpcClient = axios.create({
-  baseURL: `http://${APP_ELEMENTS_NODE_IP}:${APP_ELEMENTS_RPC_PORT}`,
-  timeout: 10000,
-  auth: {
-    username: APP_ELEMENTS_RPC_USER,
-    password: APP_ELEMENTS_RPC_PASS,
-  },
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const { getElementsRpcConfig } = require("../utils/elementsRpc");
 
 async function rpc(method, params = []) {
+  const { host, password, port, username } = getElementsRpcConfig();
+  const rpcClient = axios.create({
+    baseURL: `http://${host}:${port}`,
+    timeout: 10000,
+    auth: {
+      username,
+      password,
+    },
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
   const response = await rpcClient.post("/", {
     jsonrpc: "1.0",
     id: `liquid-electrs-${method}`,

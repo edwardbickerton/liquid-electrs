@@ -45,8 +45,10 @@ repository.
   used by the landing page.
 - `apps/frontend/` renders the Umbrel-style landing page.
 - Wallet traffic goes straight to the `electrs` service on port `51001`.
-- The app uses the external Elements RPC endpoint supplied by Umbrel via
-  `APP_ELEMENTS_*` variables.
+- The app uses PeerSwap-style Umbrel Elements wiring: `ELEMENTS_HOST` should be
+  `http://elements_node_1`, `ELEMENTS_PORT` should come from
+  `APP_ELEMENTS_NODE_RPC_PORT`, `ELEMENTS_USER` should be `elements`, and a
+  read-only `${ELEMENTS_DATA_DIR}` mount should expose `elements.conf`.
 
 ## Directory Responsibilities
 
