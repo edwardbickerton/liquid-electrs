@@ -44,6 +44,7 @@ ELEMENTS_HOST="${ELEMENTS_HOST:-http://elements_node_1}"
 ELEMENTS_PORT="${ELEMENTS_PORT:-}"
 ELEMENTS_USER="${ELEMENTS_USER:-elements}"
 ELEMENTS_PASS="${ELEMENTS_PASS:-}"
+ELEMENTS_CONF_DIR="${ELEMENTS_CONF_DIR:-/mnt/elements}"
 
 if [ -z "$ELEMENTS_PASS" ]; then
   ELEMENTS_PASS="$(elements_conf_value rpcpassword || true)"
@@ -56,28 +57,42 @@ if [ -z "$ELEMENTS_PORT" ]; then
 fi
 
 if [ -z "$ELEMENTS_PASS" ]; then
-  die "Missing Elements RPC password. Set ELEMENTS_PASS from Umbrel APP_ELEMENTS_RPC_PASS or mount elements.conf with rpcpassword."
+  die "Missing Elements RPC password. Derive APP_ELEMENTS_RPC_PASS in liquid-electrs exports.sh or mount elements.conf with rpcpassword."
 fi
 
 COOKIE="${ELEMENTS_USER}:${ELEMENTS_PASS}"
 LOG_LEVEL="${ELECTRS_LOG_LEVEL:-vv}"
 BANNER="${ELECTRS_BANNER:-Umbrel Liquid Electrs}"
+DAEMON_PARALLELISM="${ELECTRS_DAEMON_PARALLELISM:-1}"
+DB_PARALLELISM="${ELECTRS_DB_PARALLELISM:-1}"
+DB_WRITE_BUFFER_SIZE_MB="${ELECTRS_DB_WRITE_BUFFER_SIZE_MB:-64}"
+DB_BLOCK_CACHE_MB="${ELECTRS_DB_BLOCK_CACHE_MB:-8}"
 
-mkdir -p /data/electrs_liquid_db /tmp/elements
+mkdir -p /data/electrs_liquid_db
 
 # Umbrel hardware is resource constrained, so keep light mode on and do not
 # enable address search indexing.
-exec /usr/local/bin/electrs \
+set +e
+/usr/local/bin/electrs \
   -"${LOG_LEVEL}" \
   --timestamp \
   --network liquid \
   --parent-network bitcoin \
-  --daemon-dir /tmp/elements \
+  --daemon-dir "${ELEMENTS_CONF_DIR}" \
   --daemon-rpc-addr "${ELEMENTS_HOST}:${ELEMENTS_PORT}" \
+  --daemon-parallelism "${DAEMON_PARALLELISM}" \
   --cookie "${COOKIE}" \
   --jsonrpc-import \
   --lightmode \
   --electrum-rpc-addr 0.0.0.0:50001 \
   --monitoring-addr 0.0.0.0:4224 \
   --db-dir /data/electrs_liquid_db/mainnet \
+  --db-parallelism "${DB_PARALLELISM}" \
+  --db-write-buffer-size-mb "${DB_WRITE_BUFFER_SIZE_MB}" \
+  --db-block-cache-mb "${DB_BLOCK_CACHE_MB}" \
   --electrum-banner "${BANNER}"
+exit_code="$?"
+set -e
+
+echo "electrs exited with code ${exit_code}" >&2
+exit "${exit_code}"

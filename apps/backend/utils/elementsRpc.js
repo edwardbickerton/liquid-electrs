@@ -88,7 +88,7 @@ function readRpcPassword() {
   }
 
   throw new Error(
-    "Missing Elements RPC password. Set ELEMENTS_PASS from Umbrel APP_ELEMENTS_RPC_PASS or mount elements.conf with rpcpassword."
+    "Missing Elements RPC password. Derive APP_ELEMENTS_RPC_PASS in liquid-electrs exports.sh or mount elements.conf with rpcpassword."
   );
 }
 
