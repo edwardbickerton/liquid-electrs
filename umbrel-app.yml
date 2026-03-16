@@ -2,7 +2,6 @@ manifestVersion: 1
 id: liquid-electrs
 name: Liquid Electrs
 tagline: Self-hosted Liquid Electrum server for Umbrel
-icon: icon.svg
 category: finance
 version: "0.1.0"
 port: 3016

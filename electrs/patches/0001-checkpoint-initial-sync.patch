@@ -1,0 +1,319 @@
+diff --git a/src/config.rs b/src/config.rs
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -49,6 +49,12 @@
+     /// however, this requires much more disk space.
+     pub initial_sync_compaction: bool,
+ 
++    /// Maximum number of headers to process before flushing and checkpointing
++    /// progress during the initial sync or a large catch-up sync.
++    ///
++    /// Smaller values reduce memory spikes but increase total sync time.
++    pub initial_sync_batch_size: usize,
++
+     /// RocksDB block cache size in MB (per database)
+     /// Caches decompressed blocks in memory to avoid repeated decompression (CPU intensive)
+     /// Total memory usage = cache_size * 3_databases (txstore, history, cache)
+@@ -234,6 +240,12 @@
+                     .long("initial-sync-compaction")
+                     .help("Perform compaction during initial sync (slower but less disk space required)")
+             ).arg(
++                Arg::with_name("initial_sync_batch_size")
++                    .long("initial-sync-batch-size")
++                    .help("Maximum number of headers to process before flushing and checkpointing progress")
++                    .takes_value(true)
++                    .default_value("500")
++            ).arg(
+                 Arg::with_name("db_block_cache_mb")
+                     .long("db-block-cache-mb")
+                     .help("RocksDB block cache size in MB per database")
+@@ -488,6 +500,7 @@
+             cors: m.value_of("cors").map(|s| s.to_string()),
+             precache_scripts: m.value_of("precache_scripts").map(|s| s.to_string()),
+             initial_sync_compaction: m.is_present("initial_sync_compaction"),
++            initial_sync_batch_size: value_t_or_exit!(m, "initial_sync_batch_size", usize),
+             db_block_cache_mb: value_t_or_exit!(m, "db_block_cache_mb", usize),
+             db_parallelism: value_t_or_exit!(m, "db_parallelism", usize),
+             db_write_buffer_size_mb: value_t_or_exit!(m, "db_write_buffer_size_mb", usize),
+diff --git a/src/new_index/schema.rs b/src/new_index/schema.rs
+--- a/src/new_index/schema.rs
++++ b/src/new_index/schema.rs
+@@ -97,8 +97,15 @@
+                 headers_map.len(),
+                 tip_hash
+             );
+-            HeaderList::new(headers_map, tip_hash)
++            let headers = HeaderList::new(headers_map, tip_hash);
++            info!(
++                "resuming from durable tip {:?} at height {}",
++                headers.tip(),
++                headers.best_height(),
++            );
++            headers
+         } else {
++            info!("no durable tip found, starting initial sync from genesis");
+             HeaderList::empty()
+         };
+ 
+@@ -205,6 +212,7 @@
+     address_search: bool,
+     index_unspendables: bool,
+     network: Network,
++    initial_sync_batch_size: usize,
+     #[cfg(feature = "liquid")]
+     parent_network: crate::chain::BNetwork,
+ }
+@@ -216,6 +224,7 @@
+             address_search: config.address_search,
+             index_unspendables: config.index_unspendables,
+             network: config.network_type,
++            initial_sync_batch_size: config.initial_sync_batch_size.max(1),
+             #[cfg(feature = "liquid")]
+             parent_network: config.parent_network,
+         }
+@@ -293,6 +302,104 @@
+         Ok((new_headers, reorged_since))
+     }
+ 
++    fn flush_and_checkpoint(
++        &mut self,
++        tip: &BlockHash,
++        processed_headers: Vec<HeaderEntry>,
++        checkpoint_label: &str,
++    ) {
++        let t = std::time::Instant::now();
++        debug!("flushing txstore_db to disk");
++        self.store.txstore_db.flush();
++        debug!("flushing txstore_db complete in {:.1?}", t.elapsed());
++
++        let t = std::time::Instant::now();
++        debug!("flushing history_db to disk");
++        self.store.history_db.flush();
++        debug!("flushing history_db complete in {:.1?}", t.elapsed());
++
++        // cache_db receives WAL-disabled writes when --address-search is enabled,
++        // so it needs the same explicit flush to ensure durability.
++        let t = std::time::Instant::now();
++        debug!("flushing cache_db to disk");
++        self.store.cache_db.flush();
++        debug!("flushing cache_db complete in {:.1?}", t.elapsed());
++
++        self.flush = DBFlush::Enable;
++
++        debug!("updating synced tip to {:?}", tip);
++        self.store.txstore_db.put_sync(b"t", &serialize(tip));
++
++        let mut headers = self.store.indexed_headers.write().unwrap();
++        if !processed_headers.is_empty() {
++            headers.append(processed_headers);
++        }
++        assert_eq!(*tip, *headers.tip());
++
++        let durable_height = headers.best_height();
++        self.tip_metric.set(durable_height as i64);
++        info!(
++            "{}: durable tip height={} hash={:?}",
++            checkpoint_label,
++            durable_height,
++            tip,
++        );
++    }
++
++    fn process_header_window(
++        &mut self,
++        daemon: &Daemon,
++        headers: &[HeaderEntry],
++        run_compactions: bool,
++        checkpoint_label: &str,
++    ) -> Result<()> {
++        let to_add = self.headers_to_add(headers);
++        debug!(
++            "adding transactions from {} blocks using {:?}",
++            to_add.len(),
++            self.from
++        );
++
++        let mut fetcher_count = 0;
++        let mut blocks_fetched = 0;
++        let to_add_total = to_add.len();
++
++        start_fetcher(self.from, daemon, to_add)?.map(|blocks| {
++            if fetcher_count % 25 == 0 && to_add_total > 20 {
++                info!(
++                    "adding txes from blocks {}/{} ({:.1}%)",
++                    blocks_fetched,
++                    to_add_total,
++                    blocks_fetched as f32 / to_add_total as f32 * 100.0
++                );
++            }
++            fetcher_count += 1;
++            blocks_fetched += blocks.len();
++
++            self.add(&blocks)
++        });
++
++        if run_compactions {
++            self.start_auto_compactions(&self.store.txstore_db);
++        }
++
++        let to_index = self.headers_to_index(headers);
++        debug!(
++            "indexing history from {} blocks using {:?}",
++            to_index.len(),
++            self.from
++        );
++        start_fetcher(self.from, daemon, to_index)?.map(|blocks| self.index(&blocks));
++        if run_compactions {
++            self.start_auto_compactions(&self.store.history_db);
++            self.start_auto_compactions(&self.store.cache_db);
++        }
++
++        let batch_tip = *headers.last().unwrap().hash();
++        self.flush_and_checkpoint(&batch_tip, headers.to_vec(), checkpoint_label);
++        Ok(())
++    }
++
+     pub fn update(&mut self, daemon: &Daemon) -> Result<BlockHash> {
+         let daemon = daemon.reconnect()?;
+         let tip = daemon.getbestblockhash()?;
+@@ -300,6 +407,7 @@
+         let (new_headers, reorged_since) = self.get_new_headers(&daemon, &tip)?;
+ 
+         // Handle reorgs by undoing the reorged (stale) blocks first
++        let had_reorg = reorged_since.is_some();
+         if let Some(reorged_since) = reorged_since {
+             // Remove reorged headers from the in-memory HeaderList.
+             // This will also immediately invalidate all the history db entries originating from those blocks
+@@ -333,83 +441,62 @@
+                 .map(|blocks| self.undo_index(&blocks));
+         }
+ 
+-        // Add new blocks to the txstore db
+-        let to_add = self.headers_to_add(&new_headers);
+-        debug!(
+-            "adding transactions from {} blocks using {:?}",
+-            to_add.len(),
+-            self.from
+-        );
+-
+-        let mut fetcher_count = 0;
+-        let mut blocks_fetched = 0;
+-        let to_add_total = to_add.len();
+-
+-        start_fetcher(self.from, &daemon, to_add)?.map(|blocks|
+-            {
+-                if fetcher_count % 25 == 0 && to_add_total > 20 {
+-                    info!("adding txes from blocks {}/{} ({:.1}%)",
+-                        blocks_fetched,
+-                        to_add_total,
+-                        blocks_fetched as f32 / to_add_total as f32 * 100.0
+-                    );
+-                }
+-                fetcher_count += 1;
+-                blocks_fetched += blocks.len();
+-
+-                self.add(&blocks)
+-            });
+-
+-        self.start_auto_compactions(&self.store.txstore_db);
+-
+-        // Index new blocks to the history db
+-        let to_index = self.headers_to_index(&new_headers);
+-        debug!(
+-            "indexing history from {} blocks using {:?}",
+-            to_index.len(),
+-            self.from
+-        );
+-        start_fetcher(self.from, &daemon, to_index)?.map(|blocks| self.index(&blocks));
+-        self.start_auto_compactions(&self.store.history_db);
+-        self.start_auto_compactions(&self.store.cache_db);
+-
+-        if let DBFlush::Disable = self.flush {
+-            let t = std::time::Instant::now();
+-            debug!("flushing txstore_db to disk");
+-            self.store.txstore_db.flush();
+-            debug!("flushing txstore_db complete in {:.1?}", t.elapsed());
+-
+-            let t = std::time::Instant::now();
+-            debug!("flushing history_db to disk");
+-            self.store.history_db.flush();
+-            debug!("flushing history_db complete in {:.1?}", t.elapsed());
+-
+-            // cache_db receives WAL-disabled writes when --address-search is enabled,
+-            // so it needs the same explicit flush to ensure durability.
+-            let t = std::time::Instant::now();
+-            debug!("flushing cache_db to disk");
+-            self.store.cache_db.flush();
+-            debug!("flushing cache_db complete in {:.1?}", t.elapsed());
+-
+-            self.flush = DBFlush::Enable;
++        if new_headers.is_empty() {
++            if had_reorg {
++                self.flush_and_checkpoint(&tip, vec![], "reorg checkpoint flushed");
++            } else {
++                let headers = self.store.indexed_headers.read().unwrap();
++                self.tip_metric.set(headers.best_height() as i64);
++            }
++        } else {
++            let initial_sync_pending = !self.store.done_initial_sync();
++            let checkpointed_sync =
++                initial_sync_pending || new_headers.len() > self.iconfig.initial_sync_batch_size;
++
++            if checkpointed_sync {
++                let batch_label = if initial_sync_pending {
++                    "initial sync"
++                } else {
++                    "catch-up sync"
++                };
++                let batch_count =
++                    (new_headers.len() + self.iconfig.initial_sync_batch_size - 1)
++                        / self.iconfig.initial_sync_batch_size;
++                for (batch_index, window) in new_headers
++                    .chunks(self.iconfig.initial_sync_batch_size)
++                    .enumerate()
++                {
++                    info!(
++                        "{} batch {}/{}: heights {}..{} ({} headers)",
++                        batch_label,
++                        batch_index + 1,
++                        batch_count,
++                        window.first().unwrap().height(),
++                        window.last().unwrap().height(),
++                        window.len(),
++                    );
++                    let checkpoint_label = format!(
++                        "{} batch {}/{} checkpoint flushed",
++                        batch_label,
++                        batch_index + 1,
++                        batch_count,
++                    );
++                    self.process_header_window(
++                        &daemon,
++                        window,
++                        batch_index + 1 == batch_count,
++                        &checkpoint_label,
++                    )?;
++                }
++            } else {
++                self.process_header_window(&daemon, &new_headers, true, "sync update flushed")?;
++            }
+         }
+-
+-        // Update the synced tip after all db writes are flushed
+-        debug!("updating synced tip to {:?}", tip);
+-        self.store.txstore_db.put_sync(b"t", &serialize(&tip));
+-
+-        // Finally, append the new headers to the in-memory HeaderList.
+-        // This will make both the headers and the history entries visible in the public APIs, consistently with each-other.
+-        let mut headers = self.store.indexed_headers.write().unwrap();
+-        headers.append(new_headers);
+-        assert_eq!(tip, *headers.tip());
+ 
+         if let FetchFrom::BlkFiles = self.from {
+             self.from = FetchFrom::Bitcoind;
+         }
+-
+-        self.tip_metric.set(headers.best_height() as i64);
+ 
+         Ok(tip)
+     }

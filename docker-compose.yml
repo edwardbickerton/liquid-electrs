@@ -10,14 +10,27 @@ services:
       context: ${APP_DATA_DIR:-.}/electrs
       dockerfile: Dockerfile
     restart: unless-stopped
+    # The supported 16 GiB Umbrel profile caps electrs at 10 GiB and relies on
+    # checkpointed initial sync rather than larger container caps.
+    mem_limit: ${ELECTRS_MEM_LIMIT:-10g}
+    # Upstream electrs asks RocksDB for up to 100k open files; matching that
+    # limit here avoids pathological file-handle churn during initial indexing.
+    ulimits:
+      nofile:
+        soft: ${ELECTRS_NOFILE_SOFT_LIMIT:-100000}
+        hard: ${ELECTRS_NOFILE_HARD_LIMIT:-100000}
     environment:
       ELEMENTS_HOST: http://elements_node_1
       ELEMENTS_PORT: ${APP_ELEMENTS_NODE_RPC_PORT:-}
       ELEMENTS_USER: elements
       ELEMENTS_PASS: ${APP_ELEMENTS_RPC_PASS:-}
       ELEMENTS_CONF_DIR: /mnt/elements
+      ELECTRS_MEM_LIMIT: ${ELECTRS_MEM_LIMIT:-10g}
       ELECTRS_LOG_LEVEL: ${ELECTRS_LOG_LEVEL:-vv}
       ELECTRS_BANNER: "Umbrel Liquid Electrs"
+      ELECTRS_DB_WRITE_BUFFER_SIZE_MB: ${ELECTRS_DB_WRITE_BUFFER_SIZE_MB:-16}
+      ELECTRS_DB_BLOCK_CACHE_MB: ${ELECTRS_DB_BLOCK_CACHE_MB:-2}
+      ELECTRS_INITIAL_SYNC_BATCH_SIZE: ${ELECTRS_INITIAL_SYNC_BATCH_SIZE:-500}
     volumes:
       - ${APP_DATA_DIR}/data:/data
       - ${ELEMENTS_DATA_DIR}:/mnt/elements:ro
@@ -39,6 +52,7 @@ services:
       ELEMENTS_PASS: ${APP_ELEMENTS_RPC_PASS:-}
       ELEMENTS_CONF_DIR: /mnt/elements
       ELECTRS_HOST: electrs
+      ELECTRS_RPC_PORT: "50001"
       ELECTRUM_LOCAL_SERVICE: ${DEVICE_DOMAIN_NAME:-umbrel.local}
       ELECTRUM_PORT: "51001"
     volumes:

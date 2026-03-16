@@ -61,14 +61,37 @@ if [ -z "$ELEMENTS_PASS" ]; then
 fi
 
 COOKIE="${ELEMENTS_USER}:${ELEMENTS_PASS}"
+MEM_LIMIT="${ELECTRS_MEM_LIMIT:-10g}"
 LOG_LEVEL="${ELECTRS_LOG_LEVEL:-vv}"
 BANNER="${ELECTRS_BANNER:-Umbrel Liquid Electrs}"
 DAEMON_PARALLELISM="${ELECTRS_DAEMON_PARALLELISM:-1}"
 DB_PARALLELISM="${ELECTRS_DB_PARALLELISM:-1}"
-DB_WRITE_BUFFER_SIZE_MB="${ELECTRS_DB_WRITE_BUFFER_SIZE_MB:-64}"
-DB_BLOCK_CACHE_MB="${ELECTRS_DB_BLOCK_CACHE_MB:-8}"
+# Keep the default RocksDB footprint modest so Elements and electrs can coexist
+# more safely on smaller Umbrel boxes. These remain overrideable via env vars.
+DB_WRITE_BUFFER_SIZE_MB="${ELECTRS_DB_WRITE_BUFFER_SIZE_MB:-16}"
+DB_BLOCK_CACHE_MB="${ELECTRS_DB_BLOCK_CACHE_MB:-2}"
+INITIAL_SYNC_BATCH_SIZE="${ELECTRS_INITIAL_SYNC_BATCH_SIZE:-500}"
+RECOMMENDED_NOFILE_LIMIT="${ELECTRS_RECOMMENDED_NOFILE_LIMIT:-100000}"
 
 mkdir -p /data/electrs_liquid_db
+
+echo "electrs configured mem limit: ${MEM_LIMIT}" >&2
+echo "electrs initial sync batch size: ${INITIAL_SYNC_BATCH_SIZE}" >&2
+
+OPEN_FILES_LIMIT="$(ulimit -n 2>/dev/null || true)"
+if [ -n "${OPEN_FILES_LIMIT}" ]; then
+  echo "electrs open files limit: ${OPEN_FILES_LIMIT}" >&2
+  case "${OPEN_FILES_LIMIT}" in
+    ''|*[!0-9]*)
+      echo "warning: unable to compare non-numeric open files limit '${OPEN_FILES_LIMIT}'" >&2
+      ;;
+    *)
+      if [ "${OPEN_FILES_LIMIT}" -lt "${RECOMMENDED_NOFILE_LIMIT}" ]; then
+        echo "warning: open files limit ${OPEN_FILES_LIMIT} is below the upstream RocksDB recommendation of ${RECOMMENDED_NOFILE_LIMIT}" >&2
+      fi
+      ;;
+  esac
+fi
 
 # Umbrel hardware is resource constrained, so keep light mode on and do not
 # enable address search indexing.
@@ -90,6 +113,7 @@ set +e
   --db-parallelism "${DB_PARALLELISM}" \
   --db-write-buffer-size-mb "${DB_WRITE_BUFFER_SIZE_MB}" \
   --db-block-cache-mb "${DB_BLOCK_CACHE_MB}" \
+  --initial-sync-batch-size "${INITIAL_SYNC_BATCH_SIZE}" \
   --electrum-banner "${BANNER}"
 exit_code="$?"
 set -e

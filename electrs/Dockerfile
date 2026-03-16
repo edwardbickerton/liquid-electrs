@@ -1,6 +1,6 @@
 FROM rust:1.92.0-slim-bookworm
 
-ARG ELECTRS_REF=b84e2a0738d4f3256dc375f23dd5ef10b4aef0d5
+ARG ELECTRS_REF=4e1fe8e6b4f771e270709450750ac9f20f8d05a1
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
@@ -15,6 +15,7 @@ RUN apt-get update \
     libssl-dev \
     libzmq3-dev \
     make \
+    patch \
     pkg-config \
  && rm -rf /var/lib/apt/lists/*
 
@@ -26,7 +27,10 @@ RUN curl -fsSL "https://github.com/Blockstream/electrs/archive/${ELECTRS_REF}.ta
 
 WORKDIR /src/electrs
 
-RUN cargo build --locked --release --features liquid --bin electrs \
+COPY patches /patches
+
+RUN patch -p1 < /patches/0001-checkpoint-initial-sync.patch \
+ && cargo build --locked --release --features liquid --bin electrs \
  && install -Dm755 target/release/electrs /usr/local/bin/electrs \
  && rm -rf /src/electrs
 

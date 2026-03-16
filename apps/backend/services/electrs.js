@@ -1,11 +1,5 @@
-const ElectrumClient = require("@lily-technologies/electrum-client");
-
 const elementsService = require("./elements");
-const { ELECTRS_HOST } = require("../utils/const");
-
-function getRpcClient() {
-  return new ElectrumClient(50001, ELECTRS_HOST, "tcp");
-}
+const { callElectrum } = require("../utils/electrumRpc");
 
 function parseVersion(versionInfo) {
   const rawVersion = Array.isArray(versionInfo) ? versionInfo[0] : versionInfo;
@@ -22,13 +16,16 @@ function parseVersion(versionInfo) {
 }
 
 async function getVersion() {
-  const rpcClient = getRpcClient();
-  const initClient = await rpcClient.initElectrum({
-    client: "liquid-electrs",
-    version: "1.4",
-  });
+  try {
+    const versionInfo = await callElectrum("server.version", [
+      "liquid-electrs",
+      "1.4",
+    ]);
 
-  return parseVersion(initClient.versionInfo);
+    return parseVersion(versionInfo);
+  } catch (error) {
+    return "";
+  }
 }
 
 async function syncPercent() {
@@ -39,15 +36,15 @@ async function syncPercent() {
       return -1;
     }
 
-    const rpcClient = getRpcClient();
-    const initClient = await rpcClient.initElectrum({
-      client: "liquid-electrs",
-      version: "1.4",
-    });
-    const { height: electrsHeight } = await initClient.blockchainHeaders_subscribe();
+    const headerSubscription = await callElectrum("blockchain.headers.subscribe");
+    const electrsHeight = Number(headerSubscription && headerSubscription.height);
 
     if (!blockchainInfo.blocks) {
       return 0;
+    }
+
+    if (!Number.isFinite(electrsHeight)) {
+      return -2;
     }
 
     return (electrsHeight / blockchainInfo.blocks) * 100;

@@ -53,8 +53,23 @@ standard `${UMBREL_ROOT}/app-data/elements/data` path. The read-only
 but it is no longer the primary authentication path.
 
 The `electrs` wrapper is intentionally shipped in a low-resource configuration
-for Umbrel devices: `--lightmode` is enabled and address search is left
-disabled.
+for Umbrel devices: `--lightmode` is enabled, address search is left
+disabled, the default RocksDB write buffer and block cache are kept small, and
+the supported 16 GiB Umbrel profile now caps the `electrs` container at `10g`.
+The package also raises the container `nofile` limit to `100000` because
+upstream `electrs` asks RocksDB for that many open files during indexing.
+
+The main stability change is a local patch against the pinned Blockstream
+`electrs` commit that adds checkpointed initial sync. Large sync backlogs are
+processed in `500`-header windows by default, with each window explicitly
+flushed and checkpointed before the next one begins. That keeps progress
+durable across restarts and avoids the old "finish headers, then OOM before any
+useful state is saved" behavior.
+
+Those defaults can still be tuned with `ELECTRS_DB_WRITE_BUFFER_SIZE_MB`,
+`ELECTRS_DB_BLOCK_CACHE_MB`, `ELECTRS_MEM_LIMIT`,
+`ELECTRS_NOFILE_SOFT_LIMIT`, `ELECTRS_NOFILE_HARD_LIMIT`, and
+`ELECTRS_INITIAL_SYNC_BATCH_SIZE` if a specific box needs adjustment.
 
 The Umbrel `docker-compose.yml` is intentionally not directly runnable with
 plain Docker Compose because Umbrel injects the `app_proxy` service image at
@@ -73,14 +88,50 @@ To connect Blockstream App desktop to this server:
 The landing page QR code encodes the same plain `host:port` value:
 `<your-device-domain>.local:51001`.
 
-## Notes Before Publishing
+## Install On Umbrel
+
+Use this command from the Umbrel host:
+
+```bash
+umbreld client apps.install.mutate --appId liquid-electrs
+```
+
+For a clean reinstall, make sure `liquid-electrs` is not currently installed
+first. If Umbrel's installed app list does not include it but a stale
+`app-data/liquid-electrs` directory still exists, remove that stale runtime copy
+before reinstalling.
+
+## Image Publishing
 
 - `repo` and `support` in `umbrel-app.yml` assume the GitHub repository lives
   at `edwardbickerton/liquid-electrs`.
-- `docker-compose.yml` still uses local `build:` sections and is intended for
-  development and packaging iteration first.
-- Producing published multi-arch images pinned by digest is a later release
-  step.
+- `docker-compose.yml` still uses local `build:` sections so `umbreld client
+  apps.install.mutate --appId liquid-electrs` works before GHCR images are
+  published.
+- The repository still includes `.github/workflows/publish-liquid-electrs-images.yml`
+  so the app can move to digest-pinned multi-arch images later.
+- `umbrel-app.yml` intentionally does not set `icon:`. Official Umbrel apps get
+  their homescreen and App Store icon from the published
+  `umbrel-apps-gallery/<app-id>/icon.svg` asset rather than a manifest-local
+  relative path.
+- Until `liquid-electrs` is merged upstream and its gallery assets are
+  published, local installs from this unpublished app ID will show a missing
+  icon and any gallery images will also resolve to missing CDN assets.
+The publish workflow emits final digest values in the job summary so they can
+be copied into release installs once the package is ready to stop building
+on-device.
+
+## Snapshot Bootstrap
+
+If a specific Umbrel box still cannot finish a clean initial sync within the
+supported `10g` profile, the app now ships snapshot helpers:
+
+- `scripts/export-index-snapshot.sh`
+- `scripts/import-index-snapshot.sh`
+
+The snapshot contains only the durable `newindex` directory plus a small
+compatibility manifest. Imports are rejected when the app version, pinned
+Blockstream `electrs` ref, network, or low-memory defaults do not match.
 
 ## Testing
 
@@ -92,3 +143,5 @@ Recommended workflow:
 - connect `Blockstream App` desktop to your current Umbrel `.local` hostname on
   port `51001`
 - keep `Enable TLS/SSL` disabled
+- confirm `electrs` startup logs show the configured mem limit, open-files
+  limit, initial sync batch size, and resume/checkpoint messages

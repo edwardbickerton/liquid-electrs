@@ -85,7 +85,7 @@ repository.
 
 ## Known Caveats
 
-- The app is not yet ready for Umbrel store submission because it still uses
-  local `build:` sections instead of published multi-arch images pinned by
-  digest.
+- The app still uses local `build:` sections so host installs work before GHCR
+  images are published. The publish workflow is present, but digest-pinned
+  images are still a later release step.
 - The app assumes the Elements app provides a healthy external RPC endpoint.
