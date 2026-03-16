@@ -121,18 +121,6 @@ The publish workflow emits final digest values in the job summary so they can
 be copied into release installs once the package is ready to stop building
 on-device.
 
-## Snapshot Bootstrap
-
-If a specific Umbrel box still cannot finish a clean initial sync within the
-supported `10g` profile, the app now ships snapshot helpers:
-
-- `scripts/export-index-snapshot.sh`
-- `scripts/import-index-snapshot.sh`
-
-The snapshot contains only the durable `newindex` directory plus a small
-compatibility manifest. Imports are rejected when the app version, pinned
-Blockstream `electrs` ref, network, or low-memory defaults do not match.
-
 ## Testing
 
 Recommended workflow:
