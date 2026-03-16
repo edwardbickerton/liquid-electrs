@@ -39,11 +39,11 @@ output_path="$1"
 
 app_version="$(sed -n 's/.*"version": "\([^"]*\)".*/\1/p' "${repo_dir}/package.json" | head -n1)"
 electrs_ref="$(sed -n 's/^ARG ELECTRS_REF=\(.*\)$/\1/p' "${repo_dir}/electrs/Dockerfile" | head -n1)"
-write_buffer_mb="$(sed -n 's/.*ELECTRS_DB_WRITE_BUFFER_SIZE_MB="\${ELECTRS_DB_WRITE_BUFFER_SIZE_MB:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
-block_cache_mb="$(sed -n 's/.*ELECTRS_DB_BLOCK_CACHE_MB="\${ELECTRS_DB_BLOCK_CACHE_MB:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
-batch_size="$(sed -n 's/.*ELECTRS_INITIAL_SYNC_BATCH_SIZE="\${ELECTRS_INITIAL_SYNC_BATCH_SIZE:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
+write_buffer_mb="$(sed -n 's/.*DB_WRITE_BUFFER_SIZE_MB="\${ELECTRS_DB_WRITE_BUFFER_SIZE_MB:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
+block_cache_mb="$(sed -n 's/.*DB_BLOCK_CACHE_MB="\${ELECTRS_DB_BLOCK_CACHE_MB:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
+batch_size="$(sed -n 's/.*INITIAL_SYNC_BATCH_SIZE="\${ELECTRS_INITIAL_SYNC_BATCH_SIZE:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
 
-data_root="${LIQUID_ELECTRS_DATA_ROOT:-${UMBREL_ROOT:-/home/umbrel/umbrel}/app-data/liquid-electrs/data/electrs_liquid_db/mainnet}"
+data_root="${LIQUID_ELECTRS_DATA_ROOT:-${UMBREL_ROOT:-/home/umbrel/umbrel}/app-data/liquid-electrs/data/electrs_liquid_db/mainnet/liquid}"
 source_dir="${data_root}/newindex"
 
 if [ ! -d "$source_dir" ]; then

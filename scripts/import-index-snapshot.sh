@@ -49,9 +49,9 @@ fi
 
 expected_app_version="$(sed -n 's/.*"version": "\([^"]*\)".*/\1/p' "${repo_dir}/package.json" | head -n1)"
 expected_electrs_ref="$(sed -n 's/^ARG ELECTRS_REF=\(.*\)$/\1/p' "${repo_dir}/electrs/Dockerfile" | head -n1)"
-expected_write_buffer_mb="$(sed -n 's/.*ELECTRS_DB_WRITE_BUFFER_SIZE_MB="\${ELECTRS_DB_WRITE_BUFFER_SIZE_MB:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
-expected_block_cache_mb="$(sed -n 's/.*ELECTRS_DB_BLOCK_CACHE_MB="\${ELECTRS_DB_BLOCK_CACHE_MB:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
-expected_batch_size="$(sed -n 's/.*ELECTRS_INITIAL_SYNC_BATCH_SIZE="\${ELECTRS_INITIAL_SYNC_BATCH_SIZE:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
+expected_write_buffer_mb="$(sed -n 's/.*DB_WRITE_BUFFER_SIZE_MB="\${ELECTRS_DB_WRITE_BUFFER_SIZE_MB:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
+expected_block_cache_mb="$(sed -n 's/.*DB_BLOCK_CACHE_MB="\${ELECTRS_DB_BLOCK_CACHE_MB:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
+expected_batch_size="$(sed -n 's/.*INITIAL_SYNC_BATCH_SIZE="\${ELECTRS_INITIAL_SYNC_BATCH_SIZE:-\([0-9][0-9]*\)}".*/\1/p' "${repo_dir}/electrs/entrypoint.sh" | head -n1)"
 
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT INT TERM
@@ -90,7 +90,7 @@ check_manifest DB_WRITE_BUFFER_SIZE_MB "$expected_write_buffer_mb"
 check_manifest DB_BLOCK_CACHE_MB "$expected_block_cache_mb"
 check_manifest INITIAL_SYNC_BATCH_SIZE "$expected_batch_size"
 
-data_root="${LIQUID_ELECTRS_DATA_ROOT:-${UMBREL_ROOT:-/home/umbrel/umbrel}/app-data/liquid-electrs/data/electrs_liquid_db/mainnet}"
+data_root="${LIQUID_ELECTRS_DATA_ROOT:-${UMBREL_ROOT:-/home/umbrel/umbrel}/app-data/liquid-electrs/data/electrs_liquid_db/mainnet/liquid}"
 dest_dir="${data_root}/newindex"
 backup_dir="${data_root}/newindex.backup.$(date +%Y%m%d%H%M%S)"
 
