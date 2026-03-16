@@ -17,6 +17,7 @@ The app does not ship:
 - `umbrel-app.yml`: Umbrel app metadata
 - `docker-compose.yml`: Umbrel runtime definition
 - `exports.sh`: exported connection variables
+- `icon.svg`: canonical app icon source for the frontend bundle
 - `AGENTS.md`: repo-specific guidance for future Codex sessions
 - `electrs/`: Blockstream `electrs` build and runtime wrapper
 - `apps/backend/`: Express API that serves the frontend and exposes

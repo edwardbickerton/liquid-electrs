@@ -4,7 +4,7 @@
       <transition name="loading" mode="out-in">
         <div v-if="isIframe">
           <div class="flex flex-col items-center justify-center py-20">
-            <img alt="Liquid Electrs" src="@/assets/icon.svg" class="mb-5 logo" />
+            <img alt="Liquid Electrs" :src="appIconUrl" class="mb-5 logo" />
             <span class="max-w-md text-center text-gray-500 dark:text-neutral-300">
               <small>For security reasons this app cannot be embedded in an iframe.</small>
             </span>
@@ -21,6 +21,7 @@
 import { mapState } from "vuex";
 
 import Loading from "@/components/Loading";
+import { appIconUrl } from "@/constants/assets";
 
 export default {
   name: "App",
@@ -33,6 +34,7 @@ export default {
       loading: true,
       loadingProgress: 0,
       loadingPollInProgress: false,
+      appIconUrl,
     };
   },
   computed: {

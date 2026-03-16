@@ -1,6 +1,6 @@
 <template>
   <div class="flex min-h-full h-screen flex-col items-center justify-center p-2">
-    <img alt="Liquid Electrs" src="@/assets/icon.svg" class="logo mb-16 rounded-3xl" />
+    <img alt="Liquid Electrs" :src="appIconUrl" class="logo mb-16 rounded-3xl" />
 
     <div class="mb-2 w-1/2">
       <progress-bar :percentage="progress" class="h-1"></progress-bar>
@@ -31,6 +31,7 @@
 
 <script>
 import ProgressBar from "@/components/Utility/ProgressBar";
+import { appIconUrl } from "@/constants/assets";
 
 export default {
   components: {
@@ -38,6 +39,11 @@ export default {
   },
   props: {
     progress: Number,
+  },
+  data() {
+    return {
+      appIconUrl,
+    };
   },
 };
 </script>

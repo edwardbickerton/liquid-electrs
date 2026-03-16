@@ -6,6 +6,7 @@ COPY package.json /app/package.json
 COPY package-lock.json /app/package-lock.json
 COPY apps/backend/package.json /app/apps/backend/package.json
 COPY apps/frontend/package.json /app/apps/frontend/package.json
+COPY icon.svg /app/icon.svg
 
 RUN npm ci
 

@@ -2,7 +2,7 @@
   <div class="py-14">
     <div class="flex items-center justify-start">
       <div class="mr-6 flex items-center justify-center">
-        <img class="h-32 w-32 rounded-3xl" src="@/assets/icon.svg" alt="Liquid Electrs" />
+        <img class="h-32 w-32 rounded-3xl" :src="appIconUrl" alt="Liquid Electrs" />
       </div>
       <div>
         <div class="flex items-center">
@@ -53,12 +53,18 @@
 import { mapState } from "vuex";
 
 import ConnectionInformation from "@/components/ConnectionInformation";
+import { appIconUrl } from "@/constants/assets";
 import ProgressBar from "@/components/Utility/ProgressBar";
 
 export default {
   components: {
     ConnectionInformation,
     ProgressBar,
+  },
+  data() {
+    return {
+      appIconUrl,
+    };
   },
   computed: {
     ...mapState({
