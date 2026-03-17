@@ -56,7 +56,8 @@ but it is no longer the primary authentication path.
 The `electrs` wrapper is intentionally shipped in a low-resource configuration
 for Umbrel devices: `--lightmode` is enabled, address search is left
 disabled, the default RocksDB write buffer and block cache are kept small, and
-the supported 16 GiB Umbrel profile now caps the `electrs` container at `6g`.
+the supported 16 GiB Umbrel profile now caps the `electrs` container at `6g`
+RAM and `2.0` CPU cores to avoid starving the host during initial sync.
 The package also raises the container `nofile` limit to `100000` because
 upstream `electrs` asks RocksDB for that many open files during indexing.
 
@@ -69,8 +70,9 @@ useful state is saved" behavior.
 
 Those defaults can still be tuned with `ELECTRS_DB_WRITE_BUFFER_SIZE_MB`,
 `ELECTRS_DB_BLOCK_CACHE_MB`, `ELECTRS_MEM_LIMIT`,
-`ELECTRS_NOFILE_SOFT_LIMIT`, `ELECTRS_NOFILE_HARD_LIMIT`, and
-`ELECTRS_INITIAL_SYNC_BATCH_SIZE` if a specific box needs adjustment.
+`ELECTRS_NOFILE_SOFT_LIMIT`, `ELECTRS_NOFILE_HARD_LIMIT`,
+`ELECTRS_INITIAL_SYNC_BATCH_SIZE`, and `ELECTRS_CPUS` if a specific box needs
+adjustment.
 
 The Umbrel `docker-compose.yml` is intentionally not directly runnable with
 plain Docker Compose because Umbrel injects the `app_proxy` service image at

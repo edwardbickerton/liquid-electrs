@@ -13,6 +13,7 @@ services:
     # The supported 16 GiB Umbrel profile caps electrs at 6 GiB and relies on
     # checkpointed initial sync rather than larger container caps.
     mem_limit: ${ELECTRS_MEM_LIMIT:-6g}
+    cpus: ${ELECTRS_CPUS:-2.0}
     # Upstream electrs asks RocksDB for up to 100k open files; matching that
     # limit here avoids pathological file-handle churn during initial indexing.
     ulimits:
