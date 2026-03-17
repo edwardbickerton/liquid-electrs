@@ -56,13 +56,13 @@ but it is no longer the primary authentication path.
 The `electrs` wrapper is intentionally shipped in a low-resource configuration
 for Umbrel devices: `--lightmode` is enabled, address search is left
 disabled, the default RocksDB write buffer and block cache are kept small, and
-the supported 16 GiB Umbrel profile now caps the `electrs` container at `10g`.
+the supported 16 GiB Umbrel profile now caps the `electrs` container at `6g`.
 The package also raises the container `nofile` limit to `100000` because
 upstream `electrs` asks RocksDB for that many open files during indexing.
 
 The main stability change is a local patch against the pinned Blockstream
 `electrs` commit that adds checkpointed initial sync. Large sync backlogs are
-processed in `500`-header windows by default, with each window explicitly
+processed in `100`-header windows by default, with each window explicitly
 flushed and checkpointed before the next one begins. That keeps progress
 durable across restarts and avoids the old "finish headers, then OOM before any
 useful state is saved" behavior.

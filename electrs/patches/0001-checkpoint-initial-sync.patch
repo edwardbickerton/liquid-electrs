@@ -22,7 +22,7 @@ diff --git a/src/config.rs b/src/config.rs
 +                    .long("initial-sync-batch-size")
 +                    .help("Maximum number of headers to process before flushing and checkpointing progress")
 +                    .takes_value(true)
-+                    .default_value("500")
++                    .default_value("100")
 +            ).arg(
                  Arg::with_name("db_block_cache_mb")
                      .long("db-block-cache-mb")
