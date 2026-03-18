@@ -1,0 +1,4 @@
+interface:
+  display_name: "Install Liquid Electrs on Umbrel"
+  short_description: "Install or reinstall liquid-electrs on Umbrel"
+  default_prompt: "Use $install-liquid-electrs-on-umbrel to install or reinstall liquid-electrs on an Umbrel host and clean up stale app-data when needed."
