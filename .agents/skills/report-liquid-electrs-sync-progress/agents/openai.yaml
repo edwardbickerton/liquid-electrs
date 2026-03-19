@@ -1,0 +1,4 @@
+interface:
+  display_name: "Report Liquid Electrs Sync Progress"
+  short_description: "Report liquid-electrs sync concisely"
+  default_prompt: "Use $report-liquid-electrs-sync-progress to report the durable tip height, current batch range, estimated percentage, and a short health status for liquid-electrs."
