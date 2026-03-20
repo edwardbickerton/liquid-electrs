@@ -1,4 +1,4 @@
 interface:
   display_name: "Monitor Liquid Electrs Logs"
-  short_description: "Watch liquid-electrs and elements logs"
-  default_prompt: "Use $monitor-liquid-electrs-logs to inspect recent liquid-electrs logs, sample elements logs when dependency issues may be involved, compare progress over time, and keep watching with sleep-spaced snapshots when asked."
+  short_description: "Watch logs plus host CPU/RAM"
+  default_prompt: "Use $monitor-liquid-electrs-logs to inspect recent liquid-electrs logs, sample host CPU and RAM usage, check elements logs when dependency issues may be involved, compare progress over time, and keep watching with sleep-spaced snapshots when asked."
