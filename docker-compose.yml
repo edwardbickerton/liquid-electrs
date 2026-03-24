@@ -10,9 +10,9 @@ services:
       context: ${APP_DATA_DIR:-.}/electrs
       dockerfile: Dockerfile
     restart: unless-stopped
-    # The supported 16 GiB Umbrel profile caps electrs at 8 GiB and relies on
+    # The supported 16 GiB Umbrel profile caps electrs at 6 GiB and relies on
     # checkpointed initial sync rather than larger container caps.
-    mem_limit: ${ELECTRS_MEM_LIMIT:-8g}
+    mem_limit: ${ELECTRS_MEM_LIMIT:-6g}
     cpus: ${ELECTRS_CPUS:-2.0}
     # Upstream electrs asks RocksDB for up to 100k open files; matching that
     # limit here avoids pathological file-handle churn during initial indexing.
@@ -26,12 +26,12 @@ services:
       ELEMENTS_USER: elements
       ELEMENTS_PASS: ${APP_ELEMENTS_RPC_PASS:-}
       ELEMENTS_CONF_DIR: /mnt/elements
-      ELECTRS_MEM_LIMIT: ${ELECTRS_MEM_LIMIT:-8g}
+      ELECTRS_MEM_LIMIT: ${ELECTRS_MEM_LIMIT:-6g}
       ELECTRS_LOG_LEVEL: ${ELECTRS_LOG_LEVEL:-vvvv}
       ELECTRS_BANNER: "Umbrel Liquid Electrs"
       ELECTRS_DB_WRITE_BUFFER_SIZE_MB: ${ELECTRS_DB_WRITE_BUFFER_SIZE_MB:-16}
       ELECTRS_DB_BLOCK_CACHE_MB: ${ELECTRS_DB_BLOCK_CACHE_MB:-2}
-      ELECTRS_INITIAL_SYNC_BATCH_SIZE: ${ELECTRS_INITIAL_SYNC_BATCH_SIZE:-100}
+      ELECTRS_INITIAL_SYNC_BATCH_SIZE: ${ELECTRS_INITIAL_SYNC_BATCH_SIZE:-50}
     volumes:
       - ${APP_DATA_DIR}/data:/data
       - ${ELEMENTS_DATA_DIR}:/mnt/elements:ro

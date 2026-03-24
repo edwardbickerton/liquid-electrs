@@ -41,7 +41,7 @@ Repo-specific guidance for future Codex sessions in this repository.
 - Keep the wrapper low-resource: `--lightmode` enabled, address search disabled, small RocksDB write buffer and block cache, `6g` RAM and `2.0` CPU on the supported 16 GiB profile.
 - The container `nofile` limit should stay at `100000`.
 - The pinned Blockstream `electrs` commit includes the checkpointed initial sync patch.
-- Large sync backlogs are processed in `100`-header windows by default, with each window flushed and checkpointed before the next one.
+- Large sync backlogs are processed in `50`-header windows by default, with each window flushed and checkpointed before the next one.
 - Tunable defaults include `ELECTRS_DB_WRITE_BUFFER_SIZE_MB`, `ELECTRS_DB_BLOCK_CACHE_MB`, `ELECTRS_MEM_LIMIT`, `ELECTRS_NOFILE_SOFT_LIMIT`, `ELECTRS_NOFILE_HARD_LIMIT`, `ELECTRS_INITIAL_SYNC_BATCH_SIZE`, and `ELECTRS_CPUS`.
 
 ## Working Rules
